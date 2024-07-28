@@ -34,7 +34,7 @@ matugen: {
   # get matugen package
   pkg = matugen.packages.${pkgs.system}.default;
 
-  themePackage = pkgs.runCommandLocal "matugen-themes-${cfg.variant}" {} ''
+  themePackage = pkgs.runCommandLocal "matugen-themes-${cfg.variant}" {} (builtins.trace ''
     mkdir -p $out
     cd $out
     export HOME=$(pwd)
@@ -49,9 +49,24 @@ matugen: {
       --mode ${cfg.variant} \
       --type ${cfg.type} \
       --json ${cfg.jsonFormat} \
-      --quiet \
       > $out/theme.json
-  '';
+  '' ''
+    mkdir -p $out
+    cd $out
+    export HOME=$(pwd)
+
+    ${pkg}/bin/matugen \
+      image ${cfg.wallpaper} \
+      ${
+      if cfg.templates != {}
+      then "--config ${matugenConfig}"
+      else ""
+    } \
+      --mode ${cfg.variant} \
+      --type ${cfg.type} \
+      --json ${cfg.jsonFormat} \
+      > $out/theme.json
+  '');
   colors = builtins.fromJSON (builtins.readFile "${themePackage}/theme.json");
 in {
   options.programs.matugen = {
